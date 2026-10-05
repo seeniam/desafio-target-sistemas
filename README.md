@@ -1,83 +1,128 @@
-# Desafio Técnico — Target Sistemas
+# Desafio Tecnico - Target Sistemas
 
-Aplicação de terminal em TypeScript/Node.js que resolve três exercícios: comissão de vendedores, movimentação de estoque e juros por atraso. Não há API, banco de dados ou frontend; os dados de estoque vivem apenas durante a execução.
+Aplicacao em TypeScript/Node.js com interface web React para resolver tres exercicios: comissao de vendedores, movimentacao de estoque e juros por atraso. A CLI original foi preservada para execucao no terminal.
 
-## Tecnologias e requisitos
+Nao ha API, banco de dados ou autenticacao. As regras de negocio ficam em modulos independentes e sao consumidas tanto pela interface quanto pela CLI.
+
+## Tecnologias
 
 - Node.js 20 ou superior e npm
-- TypeScript (modo `strict`), Node.js `readline` e Vitest
+- TypeScript em modo `strict`
+- React, Vite e Tailwind CSS
+- Lucide React para icones
+- Vitest e Testing Library para testes
+- Node.js `readline` para a CLI
 
-## Instalação e execução
+## Instalacao
 
 ```bash
 npm install
+```
+
+## Execucao
+
+Interface web em desenvolvimento:
+
+```bash
 npm run dev
 ```
 
-Para gerar e executar a versão compilada:
+CLI original:
+
+```bash
+npm run dev:cli
+```
+
+Build completo:
 
 ```bash
 npm run build
+```
+
+Executar a CLI compilada:
+
+```bash
 npm start
 ```
 
-Para validar o projeto:
+Pre-visualizar o build web:
 
 ```bash
-npm run typecheck
+npm run preview
+```
+
+## Validacao
+
+```bash
 npm test
+npm run typecheck
+npm run build
 ```
 
 ## Estrutura
 
 ```text
 src/
-  commissions/   regras de comissões
-  inventory/     serviço de estoque e histórico
-  interest/      cálculo de juros por dia civil
-  data/          dados iniciais do enunciado
-  utils/         conversão e apresentação monetária
-  index.ts       CLI interativa
-tests/           testes de domínio por exercício
+  app/            aplicacao React, entrada Vite e testes de UI
+  components/     componentes visuais compartilhados
+  features/       paginas de visao geral, comissoes, estoque e juros
+  commissions/    regras de comissoes
+  inventory/      servico de estoque e historico
+  interest/       calculo de juros por dia civil
+  data/           dados iniciais do enunciado
+  utils/          conversao e apresentacao monetaria
+  index.ts        CLI interativa
+tests/            testes de dominio por exercicio
 ```
 
-## Soluções e regras de negócio
+## Interface web
 
-### 1. Comissão de vendedores
+A interface "Painel Operacional" organiza os tres modulos em uma experiencia responsiva:
 
-Cada venda é transformada em centavos, classificada e tem sua comissão arredondada ao centavo antes da soma por vendedor. Isso evita aplicar uma regra indevida sobre o total agregado e reduz problemas de ponto flutuante.
+- Visao geral com cards dos modulos.
+- Comissoes com KPIs, ranking, visualizacao por vendedor, filtros e tabela.
+- Estoque com cards de produtos, painel de movimentacao, feedback e historico.
+- Juros com calculadora, estados para vencimento passado, hoje e futuro, alem da explicacao da formula.
+
+## Regras de negocio
+
+### 1. Comissao de vendedores
+
+Cada venda e transformada em centavos, classificada e tem sua comissao arredondada ao centavo antes da soma por vendedor.
 
 - Abaixo de R$100,00: 0%.
-- **R$100,00 entra na faixa de 1%**; até R$499,99, permanece em 1%.
-- **R$500,00 entra na faixa de 5%**.
-- A comissão é calculada **por venda antes da agregação** por vendedor.
-
-Ao escolher a opção `1`, a CLI mostra totais e o detalhamento de cada venda.
+- R$100,00 ate R$499,99: 1%.
+- A partir de R$500,00: 5%.
+- A comissao e calculada por venda antes da agregacao por vendedor.
 
 ### 2. Estoque
 
-A opção `2` lista os produtos e solicita código, tipo (`ENTRADA` ou `SAIDA`), quantidade e descrição. A CLI gera um identificador sequencial para cada lançamento. O serviço mantém identificadores únicos, histórico, estoque anterior e final.
+O servico mantem os produtos em memoria durante a execucao. Cada movimentacao registra identificador, produto, tipo, quantidade, descricao, estoque anterior e estoque final.
 
-O produto precisa existir; quantidade é inteira positiva; descrição não pode ser vazia; e o estoque **não permite saldo negativo**. Erros de entrada são apresentados sem encerrar a aplicação.
+Validacoes:
 
-Exemplo: para o produto `101`, informe `ENTRADA`, quantidade `20` e uma descrição; em seguida será exibido o novo saldo.
+- Produto precisa existir.
+- Tipo precisa ser `ENTRADA` ou `SAIDA`.
+- Quantidade precisa ser inteira maior que zero.
+- Descricao e obrigatoria.
+- Saida nao pode gerar estoque negativo.
+- Identificador de movimentacao precisa ser unico.
 
 ### 3. Juros por atraso
 
-A opção `3` recebe valor e vencimento no formato `AAAA-MM-DD`. O exercício foi interpretado como **juros simples de 2,5% ao dia**, pois o enunciado não especifica juros compostos:
+O exercicio foi interpretado como juros simples de 2,5% ao dia:
 
 ```text
-juros = valor × 0,025 × diasEmAtraso
+juros = valor x 0,025 x diasEmAtraso
 valorAtualizado = valor + juros
 ```
 
-Datas são strings de dia civil, validadas estritamente e convertidas internamente com `Date.UTC`. Não são usados horários no vencimento nem na referência; portanto, a diferença não sofre variação por hora/minuto/segundo ou timezone. A data atual mostrada pela CLI é o dia do calendário local. Vencimento hoje ou futuro produz zero dia de atraso e zero juros.
+Datas sao strings de dia civil no formato `AAAA-MM-DD`, validadas estritamente e convertidas com `Date.UTC`. A funcao de dominio aceita uma data de referencia opcional para manter os testes deterministicos. Vencimento hoje ou futuro produz zero dia de atraso e zero juros.
 
-Exemplo: R$100,00 vencido há um dia resulta em R$2,50 de juros e R$102,50 atualizado.
+## Decisoes tecnicas
 
-## Decisões técnicas
-
-- Valores monetários são armazenados em centavos inteiros, e formatados como BRL somente na saída.
-- Regras de negócio não dependem de `readline`, permitindo testes unitários determinísticos.
-- A função de juros aceita uma data de referência opcional; os testes nunca usam a data real do computador.
-- Não há dependências de produção nem execução de comandos derivados de entradas do usuário.
+- Valores monetarios sao armazenados em centavos inteiros e formatados como BRL somente na saida.
+- A UI chama os modulos de dominio ja validados; regras de comissao, estoque e juros nao foram duplicadas nos componentes.
+- A CLI foi mantida como caminho separado por `npm run dev:cli` e `npm start`.
+- O build web e gerado em `dist/web`; a CLI compilada fica em `dist/cli`.
+- Nao ha dependencias de producao alem de React, React DOM e Lucide React.

@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist/cli",
+    "types": ["node"]
+  },
+  "include": [
+    "src/index.ts",
+    "src/commissions/**/*.ts",
+    "src/data/**/*.ts",
+    "src/interest/**/*.ts",
+    "src/inventory/**/*.ts",
+    "src/utils/**/*.ts"
+  ]
+}

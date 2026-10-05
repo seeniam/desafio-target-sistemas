@@ -20,3 +20,7 @@ Thumbs.db
 
 .idea/
 .vscode/
+
+artifacts/screenshots/
+test-results/
+playwright-report/
